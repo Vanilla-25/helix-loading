@@ -10,16 +10,16 @@
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --gold:     #c8a84b;
-    --golddim:  #7a6228;
-    --white:    #eef2ff;
-    --dim:      #7a859e;
-    --muted:    #3a4255;
-    --bg:       #06080f;
-    --card:     rgba(11, 14, 24, 0.85);
-    --brd:      rgba(200, 168, 75, 0.13);
-    --brd2:     rgba(255,255,255,0.055);
-    --success:  #4dd68c;
+    --gold:    #c8a84b;
+    --golddim: #7a6228;
+    --white:   #eef2ff;
+    --dim:     #7a859e;
+    --muted:   #2a3245;
+    --bg:      #06080f;
+    --card:    rgba(10, 13, 22, 0.88);
+    --brd:     rgba(200, 168, 75, 0.15);
+    --brd2:    rgba(255,255,255,0.06);
+    --success: #4dd68c;
   }
 
   html, body {
@@ -31,36 +31,76 @@
     user-select: none;
   }
 
-  /* ── BACKGROUND ──────────────────────────────────────────────── */
+  /* ─── BACKGROUND ─────────────────────────────────────────────── */
   #bg {
     position: fixed; inset: 0; z-index: 0;
-    background-image: url('https://cdnb.artstation.com/p/assets/images/images/006/897/561/large/björn-hurri-env-coruscant.jpg');
+    background-image: url('https://cdnb.artstation.com/p/assets/images/images/006/897/561/large/bj%C3%B6rn-hurri-env-coruscant.jpg');
     background-size: cover;
     background-position: center 30%;
-    filter: brightness(0.16) saturate(0.45);
+    filter: brightness(0.18) saturate(0.5);
     transform: scale(1.06);
     animation: bgDrift 24s ease-in-out infinite alternate;
   }
   @keyframes bgDrift {
-    from { transform: scale(1.06) translateX(0);     }
-    to   { transform: scale(1.06) translateX(-22px);  }
+    from { transform: scale(1.06) translateX(0);    }
+    to   { transform: scale(1.06) translateX(-20px); }
   }
   #bg::after {
     content: '';
     position: absolute; inset: 0;
     background:
-      linear-gradient(to top,    rgba(4,6,10,0.98) 0%,  transparent 50%),
-      linear-gradient(to bottom, rgba(4,6,10,0.7)  0%,  transparent 30%),
-      radial-gradient(ellipse at 50% 110%, rgba(200,168,75,0.05) 0%, transparent 55%);
+      linear-gradient(to top,    rgba(4,6,10,0.97) 0%, transparent 50%),
+      linear-gradient(to bottom, rgba(4,6,10,0.65) 0%, transparent 30%),
+      radial-gradient(ellipse at 50% 110%, rgba(200,168,75,0.06) 0%, transparent 55%);
   }
 
   #grain {
-    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.022;
+    position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.02;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 160px;
   }
 
-  /* ── LAYOUT ──────────────────────────────────────────────────── */
+  /* ─── ANIMATED CORNER BRACKETS ───────────────────────────────── */
+  .corn {
+    position: fixed;
+    z-index: 10;
+    width: 26px; height: 26px;
+    border-color: var(--gold);
+    border-style: solid;
+    opacity: 0;
+  }
+  .corn.tl { top: 16px; left: 16px;   border-width: 2px 0 0 2px; animation: cornTL 0.6s ease 0.2s forwards; }
+  .corn.tr { top: 16px; right: 16px;  border-width: 2px 2px 0 0; animation: cornTR 0.6s ease 0.3s forwards; }
+  .corn.bl { bottom: 16px; left: 16px;  border-width: 0 0 2px 2px; animation: cornBL 0.6s ease 0.4s forwards; }
+  .corn.br { bottom: 16px; right: 16px; border-width: 0 2px 2px 0; animation: cornBR 0.6s ease 0.5s forwards; }
+
+  @keyframes cornTL { from { opacity:0; transform: translate(-8px,-8px); } to { opacity:0.5; transform: translate(0,0); } }
+  @keyframes cornTR { from { opacity:0; transform: translate( 8px,-8px); } to { opacity:0.5; transform: translate(0,0); } }
+  @keyframes cornBL { from { opacity:0; transform: translate(-8px, 8px); } to { opacity:0.5; transform: translate(0,0); } }
+  @keyframes cornBR { from { opacity:0; transform: translate( 8px, 8px); } to { opacity:0.5; transform: translate(0,0); } }
+
+  /* Subtle breathing on corners after they land */
+  .corn.tl, .corn.tr, .corn.bl, .corn.br {
+    animation-fill-mode: forwards;
+  }
+  /* second animation layered via outline pulse */
+  .corn::after {
+    content: '';
+    position: absolute; inset: -4px;
+    border: 1px solid var(--gold);
+    opacity: 0;
+    animation: cornPulse 3s ease-in-out 1s infinite;
+  }
+  .corn.tl::after { border-width: 1px 0 0 1px; }
+  .corn.tr::after { border-width: 1px 1px 0 0; }
+  .corn.bl::after { border-width: 0 0 1px 1px; }
+  .corn.br::after { border-width: 0 1px 1px 0; }
+  @keyframes cornPulse {
+    0%,100% { opacity: 0;    inset: -4px; }
+    50%      { opacity: 0.25; inset: -8px; }
+  }
+
+  /* ─── ROOT LAYOUT ────────────────────────────────────────────── */
   #root {
     position: relative; z-index: 2;
     width: 100%; height: 100%;
@@ -68,192 +108,176 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px 36px;
-    gap: 16px;
+    padding: 20px 40px;
+    gap: 18px;
   }
 
-  /* ── HEADER ──────────────────────────────────────────────────── */
+  /* ─── HEADER ─────────────────────────────────────────────────── */
   #header {
     text-align: center;
     opacity: 0;
-    animation: fadeDown 0.7s ease 0.1s forwards;
+    animation: fadeDown 0.7s ease 0.15s forwards;
   }
-
   #header-eye {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.35em;
-    color: var(--golddim);
-    text-transform: uppercase;
-    margin-bottom: 4px;
+    font-size: 10px; letter-spacing: 0.35em;
+    color: var(--golddim); text-transform: uppercase; margin-bottom: 4px;
   }
-
   #header-title {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: clamp(44px, 6.5vw, 82px);
-    letter-spacing: 0.14em;
-    color: var(--white);
-    line-height: 1;
+    font-size: clamp(46px, 6.5vw, 84px);
+    letter-spacing: 0.14em; color: var(--white); line-height: 1;
   }
-
-  #header-title em {
-    color: var(--gold);
-    font-style: normal;
-  }
-
+  #header-title em { color: var(--gold); font-style: normal; }
   #header-sub {
-    font-size: 12px;
-    font-weight: 400;
-    letter-spacing: 0.38em;
-    color: var(--dim);
-    text-transform: uppercase;
-    margin-top: 5px;
+    font-size: 11px; font-weight: 400;
+    letter-spacing: 0.38em; color: var(--dim);
+    text-transform: uppercase; margin-top: 5px;
   }
 
-  /* ── MAIN CARD ───────────────────────────────────────────────── */
+  /* ─── MAIN CARD ──────────────────────────────────────────────── */
   #card {
-    width: 100%;
-    max-width: 1300px;
+    width: 100%; max-width: 1280px;
     background: var(--card);
     border: 1px solid var(--brd);
-    border-radius: 5px;
-    backdrop-filter: blur(20px);
+    border-radius: 6px;
+    backdrop-filter: blur(22px);
     overflow: hidden;
     opacity: 0;
-    animation: fadeUp 0.7s ease 0.3s forwards;
+    animation: fadeUp 0.7s ease 0.35s forwards;
     position: relative;
   }
-  /* gold top line */
-  #card::before {
-    content: '';
-    display: block;
+  /* animated top gold line */
+  #card-topline {
     height: 2px;
-    background: linear-gradient(to right, transparent 0%, var(--gold) 30%, var(--gold) 70%, transparent 100%);
-    opacity: 0.55;
+    background: linear-gradient(to right,
+      transparent 0%, var(--gold) 20%, var(--gold) 80%, transparent 100%);
+    opacity: 0;
+    animation: lineIn 0.8s ease 0.9s forwards;
   }
+  @keyframes lineIn { from { opacity:0; transform: scaleX(0.3); } to { opacity:0.6; transform: scaleX(1); } }
 
-  /* ── PROGRESS ROW ────────────────────────────────────────────── */
+  /* ─── PROGRESS ROW ───────────────────────────────────────────── */
   #prog-row {
-    padding: 14px 22px 12px;
+    padding: 14px 24px 13px;
     border-bottom: 1px solid var(--brd2);
   }
-
   #prog-top {
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    margin-bottom: 9px;
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 10px;
   }
-
   #sdot {
     width: 7px; height: 7px; border-radius: 50%;
-    background: var(--gold);
-    box-shadow: 0 0 7px var(--gold);
+    background: var(--gold); box-shadow: 0 0 8px var(--gold);
     flex-shrink: 0;
     animation: dpulse 2s ease-in-out infinite;
   }
   @keyframes dpulse {
-    0%,100% { opacity:1; box-shadow:0 0 7px var(--gold); }
-    50%      { opacity:0.3; box-shadow:none; }
+    0%,100% { opacity:1; box-shadow:0 0 8px var(--gold); }
+    50%      { opacity:0.25; box-shadow:none; }
   }
-
   #stext {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    color: var(--gold);
-    flex: 1;
+    font-size: 11px; letter-spacing: 0.13em;
+    color: var(--gold); flex: 1;
   }
-
+  /* sub-label under status text — shows file name when downloading */
+  #ssubtext {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px; letter-spacing: 0.08em;
+    color: var(--dim); flex: 1;
+    margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 70%;
+    display: none;
+  }
   #spct {
     font-family: 'Bebas Neue', sans-serif;
-    font-size: 17px;
-    letter-spacing: 0.08em;
-    color: var(--gold);
+    font-size: 18px; letter-spacing: 0.08em; color: var(--gold);
   }
-
   #bar-track {
-    width: 100%; height: 3px;
+    width: 100%; height: 4px;
     background: rgba(255,255,255,0.06);
-    border-radius: 2px; overflow: hidden;
+    border-radius: 2px; overflow: hidden; position: relative;
+  }
+  /* segment tick marks behind the bar */
+  #bar-track::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to right,
+      transparent 0px, transparent 99px,
+      rgba(255,255,255,0.08) 99px, rgba(255,255,255,0.08) 100px
+    );
   }
   #bar-fill {
     height: 100%; width: 0%;
     background: linear-gradient(to right, var(--golddim), var(--gold));
     border-radius: 2px;
-    box-shadow: 0 0 12px rgba(200,168,75,0.5);
-    transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+    box-shadow: 0 0 14px rgba(200,168,75,0.55);
+    transition: width 0.45s cubic-bezier(0.4,0,0.2,1);
     position: relative;
   }
   #bar-fill::after {
     content: '';
     position: absolute; top:0; right:0;
-    width: 50px; height: 100%;
-    background: linear-gradient(to right, transparent, rgba(255,255,255,0.5));
+    width: 60px; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.55));
     animation: shim 2s ease-in-out infinite;
   }
-  @keyframes shim { 0%,100%{opacity:0.3} 50%{opacity:1} }
+  @keyframes shim { 0%,100%{opacity:0.2} 50%{opacity:1} }
 
-  /* ── PLAYER ROW ──────────────────────────────────────────────── */
+  /* ─── PLAYER ROW ─────────────────────────────────────────────── */
   #player-row {
-    padding: 18px 22px;
+    padding: 16px 24px;
     border-bottom: 1px solid var(--brd2);
-    display: flex;
-    align-items: center;
-    gap: 16px;
+    display: flex; align-items: center; gap: 18px;
   }
-
   #avatar {
-    width: 52px; height: 52px;
-    border-radius: 3px;
+    width: 54px; height: 54px;
+    border-radius: 4px;
     border: 1px solid var(--brd);
     background: var(--muted);
-    overflow: hidden;
-    flex-shrink: 0;
+    overflow: hidden; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
     font-family: 'Share Tech Mono', monospace;
-    font-size: 18px;
-    color: var(--golddim);
+    font-size: 20px; color: var(--golddim);
+    position: relative;
+  }
+  /* animated scan line over avatar */
+  #avatar::after {
+    content: '';
+    position: absolute; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(to right, transparent, rgba(200,168,75,0.6), transparent);
+    animation: avatarScan 3s ease-in-out infinite;
+  }
+  @keyframes avatarScan {
+    0%   { top: 0%;   opacity: 0; }
+    10%  { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { top: 100%; opacity: 0; }
   }
   #avatar img { width:100%; height:100%; object-fit:cover; display:block; }
 
   #pinfo { flex: 1; }
-
   .tiny-label {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 9px;
-    letter-spacing: 0.22em;
-    color: var(--dim);
-    text-transform: uppercase;
-    margin-bottom: 2px;
+    font-size: 9px; letter-spacing: 0.22em;
+    color: var(--dim); text-transform: uppercase; margin-bottom: 2px;
   }
-
   #pname {
-    font-size: 21px;
-    font-weight: 700;
-    color: var(--white);
-    letter-spacing: 0.03em;
-    line-height: 1.1;
+    font-size: 22px; font-weight: 700;
+    color: var(--white); letter-spacing: 0.03em; line-height: 1.1;
   }
-
   #psteam {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px;
-    color: var(--dim);
-    letter-spacing: 0.06em;
-    margin-top: 2px;
+    font-size: 10px; color: var(--dim); letter-spacing: 0.06em; margin-top: 2px;
   }
 
-  #pstats {
-    display: flex;
-    gap: 32px;
-    align-items: center;
-    padding-right: 4px;
-  }
-
-  .ps {
-    display: flex; flex-direction: column; align-items: center; gap: 2px;
-  }
+  /* right stats */
+  #pstats { display: flex; gap: 36px; align-items: center; }
+  .ps { display: flex; flex-direction: column; align-items: center; gap: 3px; }
   .ps-lbl {
     font-family: 'Share Tech Mono', monospace;
     font-size: 9px; letter-spacing: 0.2em;
@@ -261,92 +285,90 @@
   }
   .ps-val {
     font-family: 'Rajdhani', sans-serif;
-    font-size: 15px; font-weight: 700;
-    color: var(--white); letter-spacing: 0.03em;
+    font-size: 15px; font-weight: 700; color: var(--white); letter-spacing: 0.03em;
   }
   .ps-val.ok { color: var(--success); }
 
-  /* ── LOWER GRID ──────────────────────────────────────────────── */
+  /* ─── LOWER GRID ─────────────────────────────────────────────── */
   #lower {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
   }
 
-  .icell {
-    padding: 18px 22px;
+  /* ── Info boxes (Server / Gamemode) ── */
+  .ibox {
+    padding: 16px 22px;
     border-right: 1px solid var(--brd2);
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease;
   }
-  .icell:last-child { border-right: none; }
-
-  .icell-lbl {
+  .ibox::before {
+    content: '';
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 2px;
+    background: var(--gold);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  /* subtle entrance animation per box */
+  .ibox:nth-child(1) { animation: boxSlideIn 0.5s ease 0.8s both; }
+  .ibox:nth-child(2) { animation: boxSlideIn 0.5s ease 0.95s both; }
+  @keyframes boxSlideIn {
+    from { opacity:0; transform: translateY(6px); }
+    to   { opacity:1; transform: translateY(0); }
+  }
+  .ibox-lbl {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 9px; letter-spacing: 0.22em;
-    color: var(--dim); text-transform: uppercase;
-    margin-bottom: 4px;
+    font-size: 9px; letter-spacing: 0.25em;
+    color: var(--golddim); text-transform: uppercase; margin-bottom: 6px;
   }
-  .icell-val {
-    font-size: 16px; font-weight: 600;
+  .ibox-val {
+    font-size: 17px; font-weight: 600;
     color: var(--white); letter-spacing: 0.03em;
   }
+  /* small decorative line under value */
+  .ibox-line {
+    margin-top: 8px; height: 1px; width: 32px;
+    background: linear-gradient(to right, var(--golddim), transparent);
+  }
 
-  /* Activity log */
+  /* ── Activity log box ── */
+  #log-box {
+    padding: 16px 22px;
+    animation: boxSlideIn 0.5s ease 1.1s both;
+  }
   #log-hdr {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 9px; letter-spacing: 0.22em;
-    color: var(--gold); text-transform: uppercase;
-    margin-bottom: 8px;
+    font-size: 9px; letter-spacing: 0.25em;
+    color: var(--gold); text-transform: uppercase; margin-bottom: 10px;
   }
   #log-ul {
     list-style: none;
-    display: flex; flex-direction: column; gap: 4px;
-    max-height: 88px;
-    overflow: hidden;
+    display: flex; flex-direction: column; gap: 5px;
+    max-height: 100px; overflow: hidden;
   }
   #log-ul li {
     font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; letter-spacing: 0.05em;
-    color: var(--dim);
-    display: flex; align-items: flex-start; gap: 5px;
+    font-size: 10px; letter-spacing: 0.05em; color: var(--dim);
+    display: flex; align-items: flex-start; gap: 6px;
     opacity: 0; transform: translateX(-5px);
     transition: opacity 0.35s ease, transform 0.35s ease;
   }
   #log-ul li.show { opacity: 1; transform: none; }
+  #log-ul li.new  { color: rgba(200,168,75,0.9); } /* latest entry highlight */
   #log-ul li::before { content: '›'; color: var(--gold); flex-shrink: 0; }
 
-  /* ── FOOTER ──────────────────────────────────────────────────── */
-  #footer {
-    font-family: 'Share Tech Mono', monospace;
-    font-size: 10px; letter-spacing: 0.18em;
-    color: rgba(122,133,158,0.3);
-    text-align: center;
-    opacity: 0;
-    animation: fadeUp 0.7s ease 0.6s forwards;
-  }
-
-  /* ── CORNER MARKS ────────────────────────────────────────────── */
-  .corn {
-    position: fixed;
-    width: 20px; height: 20px;
-    border-color: rgba(200,168,75,0.25);
-    border-style: solid;
-    z-index: 3;
-    opacity: 0;
-    animation: fadeIn 1s ease 0.4s forwards;
-  }
-  .corn.tl { top:12px;    left:12px;  border-width:1px 0 0 1px; }
-  .corn.tr { top:12px;    right:12px; border-width:1px 1px 0 0; }
-  .corn.bl { bottom:12px; left:12px;  border-width:0 0 1px 1px; }
-  .corn.br { bottom:12px; right:12px; border-width:0 1px 1px 0; }
-
-  @keyframes fadeUp   { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
-  @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+  /* ─── ANIMATIONS ─────────────────────────────────────────────── */
+  @keyframes fadeUp   { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeDown { from{opacity:0;transform:translateY(-12px)} to{opacity:1;transform:translateY(0)} }
 </style>
 </head>
 <body>
 
 <div id="bg"></div>
 <div id="grain"></div>
+
 <div class="corn tl"></div>
 <div class="corn tr"></div>
 <div class="corn bl"></div>
@@ -354,25 +376,31 @@
 
 <div id="root">
 
+  <!-- HEADER -->
   <div id="header">
     <div id="header-eye">Garrysmod &nbsp;·&nbsp; Clone Wars Roleplay</div>
     <div id="header-title">HELIX <em>INTERACTIVE</em></div>
     <div id="header-sub">Serious Roleplay &nbsp;·&nbsp; Est. 2024</div>
   </div>
 
+  <!-- CARD -->
   <div id="card">
+    <div id="card-topline"></div>
 
-    <!-- progress -->
+    <!-- Progress -->
     <div id="prog-row">
       <div id="prog-top">
         <div id="sdot"></div>
-        <div id="stext">Establishing Connection...</div>
+        <div style="flex:1; min-width:0;">
+          <div id="stext">Establishing Connection...</div>
+          <div id="ssubtext"></div>
+        </div>
         <div id="spct">0%</div>
       </div>
       <div id="bar-track"><div id="bar-fill"></div></div>
     </div>
 
-    <!-- player -->
+    <!-- Player -->
     <div id="player-row">
       <div id="avatar">
         <img id="av-img" src="" alt="" style="display:none">
@@ -399,41 +427,36 @@
       </div>
     </div>
 
-    <!-- lower grid -->
+    <!-- Lower -->
     <div id="lower">
-      <div class="icell">
-        <div class="icell-lbl">Server</div>
-        <div class="icell-val" id="ic-server">Helix Interactive</div>
+      <div class="ibox">
+        <div class="ibox-lbl">Server</div>
+        <div class="ibox-val" id="ic-server">Helix Interactive</div>
+        <div class="ibox-line"></div>
       </div>
-      <div class="icell">
-        <div class="icell-lbl">Gamemode</div>
-        <div class="icell-val" id="ic-gm">starwarsrp</div>
+      <div class="ibox">
+        <div class="ibox-lbl">Gamemode</div>
+        <div class="ibox-val" id="ic-gm">starwarsrp</div>
+        <div class="ibox-line"></div>
       </div>
-      <div class="icell" style="border-right:none;">
+      <div id="log-box">
         <div id="log-hdr">Activity Log</div>
-        <ul id="log-ul">
-          <li>System initialised</li>
-          <li>Connected to Helix Interactive</li>
-          <li>Authenticating connection...</li>
-          <li>Establishing secure channel...</li>
-          <li>Synchronising with server...</li>
-        </ul>
+        <ul id="log-ul"></ul>
       </div>
     </div>
 
   </div><!-- /card -->
 
-  <div id="footer">HELIX INTERACTIVE &nbsp;·&nbsp; CLONE WARS RP &nbsp;·&nbsp; DO NOT CLOSE THIS WINDOW</div>
-
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════════════════════
-//  ELEMENT REFS
+//  REFS
 // ═══════════════════════════════════════════════════════════════════
 const barFill  = document.getElementById('bar-fill');
 const pctEl    = document.getElementById('spct');
 const stEl     = document.getElementById('stext');
+const subEl    = document.getElementById('ssubtext');
 const logUl    = document.getElementById('log-ul');
 const psCount  = document.getElementById('ps-count');
 const psMap    = document.getElementById('ps-map');
@@ -444,152 +467,249 @@ const pSteam   = document.getElementById('psteam');
 const avImg    = document.getElementById('av-img');
 const avFb     = document.getElementById('av-fb');
 
-// ── Progress ──────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  PROGRESS
+// ═══════════════════════════════════════════════════════════════════
 let curP = 0;
 function setProgress(p) {
   curP = Math.max(curP, Math.min(1, p));
-  const pct = Math.round(curP * 100);
-  barFill.style.width = pct + '%';
-  pctEl.textContent   = pct + '%';
+  barFill.style.width = Math.round(curP * 100) + '%';
+  pctEl.textContent   = Math.round(curP * 100) + '%';
 }
 
-// ── Activity log ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  ACTIVITY LOG
+//  Maps real Gmod statusChanged strings to friendly display text.
+//  Gmod fires these exact strings (or close variants) in order.
+// ═══════════════════════════════════════════════════════════════════
 const MAX_LOG = 6;
-const initItems = Array.from(logUl.querySelectorAll('li'));
-initItems.forEach((li, i) => setTimeout(() => li.classList.add('show'), 500 + i * 450));
+
+// Known Gmod status strings → friendly label
+// Gmod uses these (or substrings of these) in statusChanged()
+const STATUS_MAP = [
+  { match: /challenging/i,              label: 'Challenging server...' },
+  { match: /connect/i,                  label: 'Connecting to server...' },
+  { match: /server info/i,              label: 'Retrieving server info...' },
+  { match: /sending.*client.*info/i,    label: 'Sending client info...' },
+  { match: /new server/i,               label: 'Initialising new server...' },
+  { match: /sending.*client.*data/i,    label: 'Sending client data...' },
+  { match: /verif/i,                    label: 'Verifying Steam session...' },
+  { match: /auth/i,                     label: 'Authenticating with Steam...' },
+  { match: /receiving.*signon/i,        label: 'Receiving signon data...' },
+  { match: /spawn/i,                    label: 'Spawning into server...' },
+  { match: /download/i,                 label: 'Downloading content...' },
+  { match: /precach/i,                  label: 'Precaching resources...' },
+  { match: /load.*map/i,                label: 'Loading map...' },
+  { match: /load.*resource/i,           label: 'Loading server resources...' },
+  { match: /workshop/i,                 label: 'Downloading Workshop addons...' },
+  { match: /lua/i,                      label: 'Running server Lua...' },
+  { match: /initiali/i,                 label: 'Initialising game...' },
+  { match: /ready/i,                    label: 'Ready — Entering server...' },
+];
+
+function friendlyStatus(raw) {
+  for (const entry of STATUS_MAP) {
+    if (entry.match.test(raw)) return entry.label;
+  }
+  return raw; // pass through if unrecognised
+}
+
+// Remove 'new' highlight from all previous entries
+function clearNewLog() {
+  logUl.querySelectorAll('li.new').forEach(li => li.classList.remove('new'));
+}
 
 function addLog(msg) {
   if (!msg) return;
+  clearNewLog();
   const li = document.createElement('li');
   li.textContent = msg;
+  li.classList.add('new');
   logUl.appendChild(li);
+  // Trim to max
   const all = logUl.querySelectorAll('li');
   if (all.length > MAX_LOG) all[0].remove();
+  // Animate in
   requestAnimationFrame(() => setTimeout(() => li.classList.add('show'), 20));
 }
 
 // ═══════════════════════════════════════════════════════════════════
 //  GMOD ENGINE CALLBACKS
-//  These exact function names are called by the Gmod CEF engine.
 // ═══════════════════════════════════════════════════════════════════
 
-// 0.0 → 1.0 progress
+// Called by Gmod with 0.0–1.0
 function progressChanged(p) {
   setProgress(p);
 }
 
-// Status string from engine
+// Called by Gmod with a status string at each stage
 function statusChanged(status) {
   if (!status) return;
-  stEl.textContent = status;
-  addLog(status);
+  const friendly = friendlyStatus(status);
+  stEl.textContent = friendly;
+  addLog(friendly);
+  // Hide sub-label during non-download phases
+  subEl.style.display = 'none';
 }
 
-// ── Steam name helpers ────────────────────────────────────────────
-// Gmod doesn't have one single reliable hook for the player's Steam
-// name, so we catch it from every possible source and use whichever
-// fires first.
-
+// ── Steam name ────────────────────────────────────────────────────
 function applyName(name) {
-  if (!name || name === '' || pName.dataset.set) return;
+  if (!name || pName.dataset.set) return;
   pName.dataset.set = '1';
   pName.textContent = name;
 }
 
-// Method 1: Gmod calls this on some builds
-function SetSteamName(name) {
-  applyName(name);
-}
+// Method 1: Gmod calls this directly on some builds
+function SetSteamName(name) { applyName(name); }
 
-// Method 2: URL param ?name=... (set by some server plugins or proxies)
-(function tryURLParam() {
+// Method 2: URL param fallback
+(function() {
   const p = new URLSearchParams(window.location.search);
   const n = p.get('name') || p.get('steamname') || p.get('playername');
   if (n) applyName(decodeURIComponent(n));
 })();
 
-// Method 3: Steam Web API avatar endpoint returns display name in
-// the og:title of a player's profile page. We fetch it via a
-// public CORS proxy as a best-effort fallback once we have the steamId.
-function tryFetchSteamName(steamId64) {
-  if (!steamId64 || pName.dataset.set) return;
-  // Use the Steam community XML feed — no API key needed
-  const url = 'https://steamcommunity.com/profiles/' + steamId64 + '/?xml=1';
-  fetch(url)
+// Method 3: Steam community XML (no API key, best-effort)
+function tryFetchSteamName(id64) {
+  if (!id64 || pName.dataset.set) return;
+  fetch('https://steamcommunity.com/profiles/' + id64 + '/?xml=1')
     .then(r => r.text())
     .then(xml => {
-      const match = xml.match(/<steamID><!\[CDATA\[(.+?)\]\]><\/steamID>/);
-      if (match && match[1]) applyName(match[1]);
-    })
-    .catch(() => {}); // silently fail if network blocked
+      const m = xml.match(/<steamID><!\[CDATA\[(.+?)\]\]><\/steamID>/);
+      if (m && m[1]) applyName(m[1]);
+    }).catch(() => {});
 }
 
-// Server info — fired once on connection
-// steamId is the local player's 64-bit SteamID string
+// Called by Gmod with server details
 function GameDetails(servName, mapName, maxPlayers, steamId, allowCheats) {
   if (servName) icServer.textContent = servName;
 
-  // Sanitise mapName — Gmod sometimes passes the sv_loadingurl here instead
-  // of the actual map. We detect URLs and ignore them, keeping the last
-  // known real map name (or the placeholder dash).
+  // Sanitise — Gmod sometimes passes sv_loadingurl as the map name
   if (mapName && !mapName.startsWith('http') && !mapName.startsWith('//')) {
     psMap.textContent = mapName;
   }
 
   if (maxPlayers) psCount.textContent = '10 / ' + maxPlayers;
+
   if (steamId) {
     pSteam.textContent = 'Steam ID: ' + steamId;
-    // Steam avatar
-    const url = 'https://avatars.steamstatic.com/' + steamId + '_medium.jpg';
+    const avatarUrl = 'https://avatars.steamstatic.com/' + steamId + '_medium.jpg';
     avImg.onload  = () => { avImg.style.display = 'block'; avFb.style.display = 'none'; };
-    avImg.onerror = () => { avImg.style.display = 'none';  avFb.style.display = '';      };
-    avImg.src = url;
-    // Try to pull Steam name as fallback
+    avImg.onerror = () => { avImg.style.display = 'none';  avFb.style.display = ''; };
+    avImg.src = avatarUrl;
     tryFetchSteamName(steamId);
   }
 }
 
-// File download tracking
+// ── File download tracking ────────────────────────────────────────
+// Gmod calls SetFilesTotal once, then SetFilesNeeded counts down.
+// We also intercept individual file names from statusChanged where possible.
 let filesTotal = 0;
-function SetFilesTotal(n)  { filesTotal = n; }
+let currentFile = '';
+
+function SetFilesTotal(n) {
+  filesTotal = n;
+  if (n > 0) {
+    stEl.textContent = 'Downloading server content...';
+    addLog('Downloading server content (' + n + ' files)');
+  }
+}
+
 function SetFilesNeeded(n) {
   if (filesTotal <= 0) return;
   const done = filesTotal - n;
   const ratio = done / filesTotal;
+  // Downloads span roughly 5%–80% of progress
   setProgress(0.05 + ratio * 0.75);
-  stEl.textContent = 'Downloading files (' + done + ' / ' + filesTotal + ')';
+
+  const label = 'Downloading content — ' + done + ' / ' + filesTotal + ' files';
+  stEl.textContent = label;
+
+  // Show sub-label with current file if we have one
+  if (currentFile) {
+    subEl.style.display = 'block';
+    subEl.textContent   = currentFile;
+  }
+
+  // Log a milestone every 25%
+  const pct = Math.round(ratio * 100);
+  if (pct > 0 && pct % 25 === 0) {
+    addLog('Download ' + pct + '% complete (' + done + ' / ' + filesTotal + ')');
+  }
+}
+
+// Some Gmod/FastDL setups pass individual filenames through statusChanged.
+// We detect them and show as a sub-label rather than a main log entry.
+const FILE_PATTERN = /\.(vtf|vmt|mdl|wav|mp3|ogg|bsp|lua|png|jpg)$/i;
+const _origStatusChanged = statusChanged;
+
+// Override statusChanged to intercept file-path strings
+function statusChanged(status) {
+  if (!status) return;
+  if (FILE_PATTERN.test(status)) {
+    // It's a filename — show as sub-label, don't log it
+    currentFile = status.split('/').pop(); // just the filename
+    subEl.style.display = 'block';
+    subEl.textContent   = currentFile;
+    return;
+  }
+  // Otherwise normal handling
+  const friendly = friendlyStatus(status);
+  stEl.textContent = friendly;
+  subEl.style.display = 'none';
+  addLog(friendly);
 }
 
 // ═══════════════════════════════════════════════════════════════════
-//  DEV SIMULATION — only runs outside Gmod's browser
+//  DEV SIMULATION — skipped inside Gmod's CEF browser
 // ═══════════════════════════════════════════════════════════════════
 (function() {
-  if (navigator.userAgent.indexOf('Valve') !== -1) return; // inside Gmod, skip
+  if (navigator.userAgent.indexOf('Valve') !== -1) return;
+
+  // Seed initial log
+  addLog('System initialised');
 
   setTimeout(() => {
-    GameDetails('Helix Interactive', 'rp_coruscant', 128, '76561199447261947', false);
-    // Simulate SetSteamName being called by the engine
-    setTimeout(() => SetSteamName('YourSteamName'), 300);
-  }, 700);
+    GameDetails('Helix Interactive | Clone Wars RP', 'rp_venator_notorious', 128, '76561199447261947', false);
+    setTimeout(() => SetSteamName('YourSteamName'), 200);
+  }, 600);
 
-  const steps = [
-    [0.05, 'Sending client info'],
-    [0.18, 'Authenticating connection'],
-    [0.35, 'Downloading game files'],
-    [0.58, 'Loading map'],
-    [0.78, 'Loading resources'],
-    [0.92, 'Preparing client'],
-    [1.00, 'Ready — Welcome to Helix Interactive'],
+  // Realistic Gmod loading sequence
+  const sequence = [
+    { at: 0.01, status: 'Challenging server' },
+    { at: 0.03, status: 'Sending client info' },
+    { at: 0.06, status: 'Sending client data' },
+    { at: 0.09, status: 'Verifying Steam session' },
+    { at: 0.12, status: 'Receiving signon data' },
+    // File downloads
+    { at: 0.15, fn: () => { SetFilesTotal(124); setProgress(0.15); } },
+    { at: 0.18, status: 'models/player/soldier.mdl' },
+    { at: 0.28, status: 'materials/models/soldier.vmt' },
+    { at: 0.38, fn: () => { SetFilesNeeded(62); } },
+    { at: 0.45, status: 'sound/clone/vo_01.wav' },
+    { at: 0.55, fn: () => { SetFilesNeeded(31); } },
+    { at: 0.60, status: 'Workshop addon: 501st Legion Pack' },
+    { at: 0.68, fn: () => { SetFilesNeeded(0); } },
+    // Post-download
+    { at: 0.78, status: 'Loading map' },
+    { at: 0.84, status: 'Precaching resources' },
+    { at: 0.90, status: 'Running server Lua' },
+    { at: 0.95, status: 'Spawning' },
+    { at: 1.00, status: 'Ready' },
   ];
+
   let p = 0, si = 0;
   const iv = setInterval(() => {
-    p += Math.random() * 0.010 + 0.003;
-    if (p >= 1) { p = 1; clearInterval(iv); }
+    p = Math.min(1, p + Math.random() * 0.009 + 0.002);
     setProgress(p);
-    if (si < steps.length && p >= steps[si][0]) {
-      statusChanged(steps[si][1]); si++;
+    while (si < sequence.length && p >= sequence[si].at) {
+      const s = sequence[si];
+      if (s.status) statusChanged(s.status);
+      if (s.fn)     s.fn();
+      si++;
     }
-  }, 90);
+    if (p >= 1) clearInterval(iv);
+  }, 80);
 })();
 </script>
 </body>
