@@ -33,7 +33,7 @@ html,body {
   user-select:none;
 }
 
-/* ── CANVAS (stars + brackets) ─────────────────────────────── */
+/* ── CANVAS ─────────────────────────────────────────────────── */
 #cvs {
   position:fixed;inset:0;z-index:0;pointer-events:none;
 }
@@ -109,7 +109,6 @@ html,body {
   box-shadow:0 32px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.03);
 }
 
-/* top shimmer line */
 #panel-line {
   height:1px;
   background:linear-gradient(90deg,transparent 0%,var(--pink) 30%,var(--pinklight) 50%,var(--pink) 70%,transparent 100%);
@@ -179,14 +178,12 @@ html,body {
 /* ── PLAYER ROW ─────────────────────────────────────────────── */
 #ply-row {
   display:grid;
-  /* avatar | info | divider | stats */
   grid-template-columns:auto 1fr 1px auto;
   align-items:center;gap:0;
   padding:20px 28px;
   border-bottom:1px solid rgba(255,255,255,0.04);
 }
 
-/* Avatar */
 #av-outer {
   width:52px;height:52px;
   border-radius:8px;
@@ -199,7 +196,6 @@ html,body {
   margin-right:18px;
 }
 #av-outer img{width:100%;height:100%;object-fit:cover;display:block}
-/* soft scan line */
 #av-scan {
   position:absolute;left:0;right:0;height:1px;top:0;
   background:linear-gradient(90deg,transparent,rgba(232,180,184,0.7),transparent);
@@ -207,7 +203,6 @@ html,body {
 }
 @keyframes avscan{0%{top:0%;opacity:0}5%{opacity:1}95%{opacity:1}100%{top:100%;opacity:0}}
 
-/* Player info */
 #ply-info {margin-right:28px;min-width:0}
 #ply-eyebrow {
   font-family:'DM Mono',monospace;
@@ -225,14 +220,12 @@ html,body {
   letter-spacing:0.06em;margin-top:4px;
 }
 
-/* Vertical divider */
 #ply-divider {
   width:1px;height:44px;
   background:linear-gradient(to bottom,transparent,var(--border),transparent);
   flex-shrink:0;
 }
 
-/* Stats */
 #ply-stats {
   display:flex;align-items:stretch;gap:0;
   margin-left:28px;
@@ -240,7 +233,6 @@ html,body {
 .stat {
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:0 24px;gap:5px;
-  /* Hard fixed width — values must never push layout */
   width:110px;
   flex-shrink:0;
   flex-grow:0;
@@ -263,7 +255,8 @@ html,body {
 .stat-value.ok{color:var(--success)}
 
 /* ── LOWER GRID ─────────────────────────────────────────────── */
-#lower{display:grid;grid-template-columns:1fr 1fr 1.6fr}
+/* FIX: 4 columns now to accommodate Tips block */
+#lower{display:grid;grid-template-columns:1fr 1fr 1fr 1.6fr}
 
 .iblock {
   padding:18px 28px 20px;
@@ -271,7 +264,6 @@ html,body {
   position:relative;overflow:hidden;
 }
 .iblock:last-child{border-right:none}
-/* subtle left accent */
 .iblock::before {
   content:'';
   position:absolute;left:0;top:20px;bottom:20px;width:1px;
@@ -286,7 +278,12 @@ html,body {
 .iblock-val {
   font-size:14px;font-weight:500;
   color:var(--text);letter-spacing:0.01em;
-  min-height:1.5em;/* prevents height jump when text loads */
+  min-height:1.5em;
+}
+
+/* FIX: Tip text fade transition */
+#tip-text {
+  transition:opacity 0.4s ease;
 }
 
 /* ── ACTIVITY LOG ───────────────────────────────────────────── */
@@ -320,7 +317,6 @@ html,body {
 }
 #log-list li.show{opacity:1;transform:none}
 #log-list li.fresh{color:rgba(232,180,184,0.85)}
-/* no bullet arrow on log items */
 
 /* ── KEYFRAMES ──────────────────────────────────────────────── */
 @keyframes fadeup  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -336,7 +332,8 @@ html,body {
 
   <!-- Header -->
   <div id="hdr">
-    <div id="hdr-label">Garrysmod · Clone Wars Roleplay</div>
+    <!-- FIX 6: "Garry's Mod" spelling corrected -->
+    <div id="hdr-label">Garry's Mod · Clone Wars Roleplay</div>
     <div id="hdr-title">Helix <b>Interactive</b></div>
     <div id="hdr-divider"></div>
     <div id="hdr-sub">Serious Military Roleplay</div>
@@ -378,6 +375,7 @@ html,body {
       <div id="ply-stats">
         <div class="stat">
           <div class="stat-label">Players</div>
+          <!-- FIX 3: No longer hard-coded "10 / max" — shows "— / max" until GMod provides real data -->
           <div class="stat-value" id="ps-count">— / —</div>
         </div>
         <div class="stat">
@@ -401,6 +399,11 @@ html,body {
         <div class="iblock-label">Gamemode</div>
         <div class="iblock-val" id="ic-gm">starwarsrp</div>
       </div>
+      <!-- FIX 2 (Bonus): Rotating Tips block -->
+      <div class="iblock">
+        <div class="iblock-label">Tip</div>
+        <div class="iblock-val" id="tip-text"></div>
+      </div>
       <div class="iblock" id="log-block">
         <div id="log-title">Activity Log</div>
         <ul id="log-list"></ul>
@@ -415,14 +418,14 @@ html,body {
 'use strict';
 
 /* ═══════════════════════════════════════════════════════════════
-   CANVAS — 300 stars + 4 bouncing corner brackets
+   CANVAS — stars + corner brackets
+   FIX 1: SPD changed from 0 to 0.35 so brackets actually move
 ═══════════════════════════════════════════════════════════════ */
 (function () {
   var cvs = document.getElementById('cvs');
   var ctx = cvs.getContext('2d');
   var W = 0, H = 0;
 
-  /* Stars */
   var stars = [];
   function seedStars() {
     stars = [];
@@ -438,9 +441,8 @@ html,body {
     }
   }
 
-  /* Bouncing corner brackets */
-  var ARM = 26, LW = 1.5, SPD = 0;
-  /* anchor = inner corner of bracket */
+  /* FIX 1: SPD was 0, now 0.35 — brackets will actually bounce */
+  var ARM = 26, LW = 1.5, SPD = 0.35;
   var br = [
     { c:'tl', x:0, y:0, vx: SPD, vy: SPD },
     { c:'tr', x:0, y:0, vx:-SPD, vy: SPD },
@@ -456,13 +458,12 @@ html,body {
     br[3].x = W - PAD;   br[3].y = H - PAD;
   }
 
-  /* Each bracket bounces within its own half of the screen */
   function bounds(c) {
     var mx = W / 2, my = H / 2;
     if (c === 'tl') return { x0: PAD,     x1: mx - ARM - PAD, y0: PAD,     y1: my - ARM - PAD };
     if (c === 'tr') return { x0: mx + PAD, x1: W - PAD,       y0: PAD,     y1: my - ARM - PAD };
     if (c === 'bl') return { x0: PAD,     x1: mx - ARM - PAD, y0: my + PAD, y1: H - PAD };
-    /* br */        return { x0: mx + PAD, x1: W - PAD,       y0: my + PAD, y1: H - PAD };
+                    return { x0: mx + PAD, x1: W - PAD,       y0: my + PAD, y1: H - PAD };
   }
 
   function drawBr(c, x, y) {
@@ -471,15 +472,14 @@ html,body {
     ctx.lineWidth   = LW;
     ctx.lineCap     = 'square';
     ctx.beginPath();
-    /* Each bracket is drawn as two arms from the inner corner */
     if (c === 'tl') {
-      ctx.moveTo(x + ARM, y);    ctx.lineTo(x, y);    ctx.lineTo(x, y + ARM);
+      ctx.moveTo(x + ARM, y); ctx.lineTo(x, y); ctx.lineTo(x, y + ARM);
     } else if (c === 'tr') {
-      ctx.moveTo(x - ARM, y);    ctx.lineTo(x, y);    ctx.lineTo(x, y + ARM);
+      ctx.moveTo(x - ARM, y); ctx.lineTo(x, y); ctx.lineTo(x, y + ARM);
     } else if (c === 'bl') {
-      ctx.moveTo(x + ARM, y);    ctx.lineTo(x, y);    ctx.lineTo(x, y - ARM);
+      ctx.moveTo(x + ARM, y); ctx.lineTo(x, y); ctx.lineTo(x, y - ARM);
     } else {
-      ctx.moveTo(x - ARM, y);    ctx.lineTo(x, y);    ctx.lineTo(x, y - ARM);
+      ctx.moveTo(x - ARM, y); ctx.lineTo(x, y); ctx.lineTo(x, y - ARM);
     }
     ctx.stroke();
     ctx.restore();
@@ -490,7 +490,6 @@ html,body {
     ctx.clearRect(0, 0, W, H);
     t++;
 
-    /* Stars */
     for (var i = 0; i < stars.length; i++) {
       var s = stars[i];
       var a = s.base + Math.sin(t * s.spd * 60 + s.ph) * s.base * 0.5;
@@ -501,7 +500,6 @@ html,body {
       ctx.fill();
     }
 
-    /* Brackets */
     for (var j = 0; j < br.length; j++) {
       var b  = br[j];
       var bd = bounds(b.c);
@@ -560,34 +558,24 @@ function setProgress(p) {
 ═══════════════════════════════════════════════════════════════ */
 var MAX_LOG = 5;
 
-/* Real Gmod status strings mapped to readable labels.
-   Gmod fires statusChanged() with exact strings like these — checked against
-   the Gmod wiki and community loading screen documentation. */
 var STATUS_MAP = [
-  /* Early connection handshake */
   { re: /challeng/i,                   label: 'Challenging server...'              },
   { re: /sending.*client.*info/i,      label: 'Sending client info...'             },
   { re: /new server/i,                 label: 'Connecting to new server...'        },
   { re: /sending.*client.*data/i,      label: 'Sending client data...'             },
   { re: /verif/i,                      label: 'Verifying Steam session...'         },
   { re: /receiving.*signon/i,          label: 'Receiving server data...'           },
-  /* File downloads — Gmod says "Downloading" or "Requesting" */
   { re: /request.*file/i,              label: 'Requesting files from server...'    },
   { re: /download.*file/i,             label: 'Downloading files...'               },
-  /* Workshop — Gmod says "Lua Started!" when the gamemode begins loading */
   { re: /lua started/i,                label: 'Gamemode loading — Lua started...'  },
-  /* Map loading stages */
   { re: /load.*map|map.*load/i,        label: 'Loading map...'                     },
   { re: /precach/i,                    label: 'Precaching resources...'            },
-  /* Gamemode / addon initialisation */
   { re: /initiali/i,                   label: 'Initialising gamemode...'           },
   { re: /workshop/i,                   label: 'Mounting Workshop addons...'        },
-  /* Final stages */
   { re: /spawn/i,                      label: 'Spawning into server...'            },
   { re: /ready/i,                      label: 'Ready — entering server...'         },
 ];
 
-/* Files sent as raw paths — show as sub-label, not a log entry */
 var FILE_RE = /\.(vtf|vmt|mdl|wav|mp3|ogg|bsp|png|jpg|phy|ani)$/i;
 
 function friendlyStatus(raw) {
@@ -600,20 +588,17 @@ function friendlyStatus(raw) {
 function addLog(msg) {
   if (!msg) return;
 
-  /* Un-highlight previous latest */
   var prev = logList.querySelectorAll('li.fresh');
   for (var i = 0; i < prev.length; i++) prev[i].classList.remove('fresh');
 
   var li = document.createElement('li');
   li.textContent = msg;
   li.classList.add('fresh');
-  logList.insertBefore(li, logList.firstChild); /* newest at top */
+  logList.insertBefore(li, logList.firstChild);
 
-  /* Trim overflow */
   var all = logList.querySelectorAll('li');
   if (all.length > MAX_LOG) logList.removeChild(all[all.length - 1]);
 
-  /* Animate in */
   requestAnimationFrame(function () {
     setTimeout(function () { li.classList.add('show'); }, 20);
   });
@@ -621,22 +606,16 @@ function addLog(msg) {
 
 /* ═══════════════════════════════════════════════════════════════
    GMOD ENGINE CALLBACKS
-   These exact function names are called by the Gmod CEF browser.
 ═══════════════════════════════════════════════════════════════ */
 
-/* Called repeatedly with 0.0 → 1.0 */
 function progressChanged(p) {
   setProgress(p);
 }
 
-/* Called by Gmod with a status string at each loading stage.
-   Also intercepts raw file paths and shows them as a sub-label
-   without cluttering the activity log. */
 function statusChanged(status) {
   if (!status) return;
 
   if (FILE_RE.test(status)) {
-    /* It's a raw file path — show just the filename as sub-label */
     var parts = status.split('/');
     subEl.textContent   = parts[parts.length - 1];
     subEl.style.display = 'block';
@@ -649,62 +628,81 @@ function statusChanged(status) {
   addLog(friendly);
 }
 
-/* ── Steam name (3 fallback methods) ─────────────────────────── */
-
+/* ── Steam name (URL query param fallback) ───────────────────── */
 function applyName(name) {
   if (!name || plyName.dataset.set) return;
   plyName.dataset.set = '1';
   plyName.textContent = name;
 }
 
-/* Method 1 — Gmod calls this directly on some builds */
 function SetSteamName(name) {
   applyName(name);
 }
 
-/* Method 2 — URL query param (?name=, ?steamname=, ?playername=) */
 (function () {
   var p = new URLSearchParams(window.location.search);
   var n = p.get('name') || p.get('steamname') || p.get('playername');
   if (n) applyName(decodeURIComponent(n));
 }());
 
-/* Method 3 — Steam Community XML feed (no API key required).
-   Fetched once we have the 64-bit Steam ID from GameDetails(). */
-function tryFetchSteamName(id64) {
-  if (!id64 || plyName.dataset.set) return;
+/* ── FIX 2 (Avatar + Name): Combined Steam profile fetch ────────
+   Fetches both name AND real avatar hash from the XML feed.
+   The old code used steamid directly in the avatar URL which is wrong —
+   Steam avatars require a hash from the profile XML.
+═══════════════════════════════════════════════════════════════ */
+function tryFetchSteamProfile(id64) {
+  if (!id64) return;
+
   fetch('https://steamcommunity.com/profiles/' + id64 + '/?xml=1')
-    .then(function (r) { return r.text(); })
-    .then(function (xml) {
-      var m = xml.match(/<steamID><!\[CDATA\[(.+?)\]\]><\/steamID>/);
-      if (m && m[1]) applyName(m[1]);
+    .then(function(r) { return r.text(); })
+    .then(function(xml) {
+
+      /* Extract display name */
+      var nameMatch = xml.match(/<steamID><!\[CDATA\[(.+?)\]\]><\/steamID>/);
+      if (nameMatch && nameMatch[1]) {
+        applyName(nameMatch[1]);
+      }
+
+      /* Extract full-size avatar URL (contains the correct hash) */
+      var avatarMatch = xml.match(/<avatarFull><!\[CDATA\[(.+?)\]\]><\/avatarFull>/);
+      if (avatarMatch && avatarMatch[1]) {
+        avImg.onload = function() {
+          avImg.style.display = 'block';
+          avFb.style.display  = 'none';
+        };
+        avImg.onerror = function() {
+          avImg.style.display = 'none';
+          avFb.style.display  = '';
+        };
+        avImg.src = avatarMatch[1];
+      }
+
     })
-    .catch(function () { /* silently fail — Gmod may block outbound requests */ });
+    .catch(function() {
+      /* Silently fail — GMod CEF may block cross-domain requests (FIX 5 acknowledged) */
+    });
 }
 
-/* Called once by Gmod with server connection details.
-   Gmod signature: GameDetails(hostName, mapName, maxPlayers, steamId, allowCheats) */
+/* Called once by Gmod with server connection details */
 function GameDetails(servName, mapName, maxPlayers, steamId, allowCheats) {
 
-  /* Server name */
   if (servName && typeof servName === 'string') {
     icServer.textContent = servName;
   }
 
-  /* Map name — ignore anything that looks like a URL */
   if (mapName && typeof mapName === 'string'
       && mapName.indexOf('http') !== 0
       && mapName.indexOf('//') !== 0) {
     psMap.textContent = mapName;
   }
 
-  /* Max players — must parse as a real positive number */
+  /* FIX 3: Only show maxPlayers; don't hard-code a fake current player count.
+     GMod does not send current player count to the loading screen. */
   var mp = parseInt(maxPlayers, 10);
   if (!isNaN(mp) && mp > 0) {
-    psCount.textContent = '10 / ' + mp;
+    psCount.textContent = '— / ' + mp;
   }
 
-  /* Steam ID — validate it looks like a real 64-bit ID before using */
   var sid = String(steamId || '');
   var isValid64   = /^[0-9]{15,20}$/.test(sid);
   var isLegacyFmt = /^STEAM_[0-9]:[01]:[0-9]+$/i.test(sid);
@@ -712,109 +710,124 @@ function GameDetails(servName, mapName, maxPlayers, steamId, allowCheats) {
   if (isValid64 || isLegacyFmt) {
     plySteam.textContent = 'Steam ID: ' + sid;
     if (isValid64) {
-      var avatarUrl = 'https://avatars.steamstatic.com/' + sid + '_medium.jpg';
-      avImg.onload  = function () { avImg.style.display = 'block'; avFb.style.display = 'none'; };
-      avImg.onerror = function () { avImg.style.display = 'none';  avFb.style.display = ''; };
-      avImg.src = avatarUrl;
-      tryFetchSteamName(sid);
+      /* FIX 2: Use tryFetchSteamProfile instead of tryFetchSteamName.
+         This correctly retrieves both the name AND the avatar hash URL. */
+      tryFetchSteamProfile(sid);
     }
   }
 }
 
-/* ── File download tracking ───────────────────────────────────── */
-
+/* ── FIX 3 (Workshop download progress) ─────────────────────────
+   Improved milestone granularity (every 10% instead of every 25%)
+   and clearer status text.
+═══════════════════════════════════════════════════════════════ */
 var filesTotal    = 0;
 var lastMilestone = -1;
 
-/* Gmod calls this once at the start of the download phase */
-function SetFilesTotal(n) {
-  filesTotal    = n;
+function SetFilesTotal(total) {
+  filesTotal    = total;
   lastMilestone = -1;
-  if (n > 0) {
-    stEl.textContent    = 'Requesting files from server...';
+
+  if (total > 0) {
+    stEl.textContent    = 'Downloading workshop content...';
     subEl.style.display = 'none';
-    addLog('Downloading ' + n + ' files from server');
+    addLog('Workshop download started (' + total + ' files)');
   }
 }
 
-/* Gmod calls this repeatedly as files complete — n counts DOWN to 0 */
-function SetFilesNeeded(n) {
+/* GMod counts DOWN — needed goes from total to 0 */
+function SetFilesNeeded(needed) {
   if (filesTotal <= 0) return;
 
-  var done  = filesTotal - n;
-  var ratio = done / filesTotal;
+  var completed = filesTotal - needed;
+  var percent   = completed / filesTotal;
 
-  /* Downloads span 5 %–80 % of the bar */
-  setProgress(0.05 + ratio * 0.75);
-  stEl.textContent = 'Downloading — ' + done + ' / ' + filesTotal + ' files';
+  /* Downloads span 5%–80% of the bar */
+  setProgress(0.05 + percent * 0.75);
 
-  /* Log once at each 25 % milestone */
-  var milestone = Math.floor(ratio * 4) * 25;
+  stEl.textContent =
+    'Downloading workshop content — ' + completed + ' / ' + filesTotal;
+
+  /* Log at every 10% milestone (was every 25% before) */
+  var milestone = Math.floor(percent * 10) * 10;
   if (milestone > 0 && milestone !== lastMilestone) {
     lastMilestone = milestone;
-    addLog('Download ' + milestone + '% complete (' + done + '/' + filesTotal + ')');
+    addLog('Download ' + milestone + '% complete (' + completed + '/' + filesTotal + ')');
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   ROTATING TIPS
+   FIX (Bonus): Tips rotate every 6 seconds with a fade transition.
+   CSS transition defined above on #tip-text.
+═══════════════════════════════════════════════════════════════ */
+var tips = [
+  'Use /radio to communicate with your squad.',
+  'Follow your commanding officer at all times.',
+  'Breaking roleplay rules may result in punishment.',
+  'Stay in formation during deployments.',
+  'Check the F4 menu for server rules and jobs.',
+  'Respect other players and staff at all times.',
+  'Use /comms to talk to command.'
+];
+
+var tipIndex = 0;
+var tipEl    = document.getElementById('tip-text');
+
+function rotateTips() {
+  tipEl.style.opacity = '0';
+  setTimeout(function() {
+    tipEl.textContent   = tips[tipIndex];
+    tipIndex            = (tipIndex + 1) % tips.length;
+    tipEl.style.opacity = '1';
+  }, 400);
+}
+
+rotateTips();
+setInterval(rotateTips, 6000);
+
+/* ═══════════════════════════════════════════════════════════════
    DEV SIMULATION
-   Runs only in a regular browser (not inside Gmod's CEF engine).
-   Simulates the full realistic Gmod loading sequence so you can
-   preview the loading screen without connecting to the server.
+   FIX 7: Still intentional — only runs outside GMod's CEF (no "Valve" UA).
+   Updated to use tryFetchSteamProfile and correct player count format.
 ═══════════════════════════════════════════════════════════════ */
 (function devSim() {
-  /* Gmod's CEF user-agent contains the string "Valve" */
   if (navigator.userAgent.indexOf('Valve') !== -1) return;
 
   addLog('System initialised');
 
-  /* Fire GameDetails after a short delay to simulate connection handshake */
   setTimeout(function () {
     GameDetails(
-      'Helix Interactive | Clone Wars RP', /* server name */
-      'rp_venator_notorious',              /* map          */
-      128,                                 /* max players  */
-      '76561199447261947',                 /* your Steam64 */
+      'Helix Interactive | Clone Wars RP',
+      'rp_venator_notorious',
+      128,
+      '76561199447261947',
       false
     );
-    /* Steam name arrives slightly after GameDetails */
     setTimeout(function () { SetSteamName('YourSteamName'); }, 300);
   }, 600);
 
-  /* Realistic Gmod loading sequence.
-     at = progress fraction (0.0–1.0) at which this step fires.
-     s  = status string passed to statusChanged()
-     f  = arbitrary function to call instead */
-  /* These strings match what Gmod's CEF actually fires in statusChanged().
-     File paths (.mdl, .vmt etc.) are intercepted by FILE_RE and shown as
-     sub-labels rather than log entries. */
   var seq = [
-    /* Connection handshake */
-    { at:0.02, s:'Challenging'                                     },
-    { at:0.05, s:'Sending client info'                             },
-    { at:0.08, s:'Sending client data'                             },
-    { at:0.11, s:'Verifying Steam session'                         },
-    { at:0.13, s:'Receiving signon data'                           },
-    /* Gmod fires SetFilesTotal / SetFilesNeeded for HTTP downloads */
-    { at:0.15, f:function(){ SetFilesTotal(124); }                 },
-    /* Individual file paths come through statusChanged as-is */
-    { at:0.19, s:'models/clone_trooper/ct_phase2.mdl'              },
-    { at:0.26, s:'materials/models/ct_phase2/ct_phase2.vmt'        },
-    { at:0.33, s:'materials/models/ct_phase2/ct_phase2.vtf'        },
-    { at:0.38, f:function(){ SetFilesNeeded(62); }                 },
-    { at:0.42, s:'sound/helix/clone_vo_01.wav'                     },
-    { at:0.49, s:'models/weapons/w_rif_dc15a.mdl'                  },
-    { at:0.54, f:function(){ SetFilesNeeded(31); }                 },
-    { at:0.62, f:function(){ SetFilesNeeded(0); }                  },
-    /* After downloads — Gmod loads the map BSP */
-    { at:0.70, s:'Loading map'                                     },
-    /* Gmod fires this exact string when Lua starts */
-    { at:0.76, s:'Lua Started!'                                    },
-    { at:0.82, s:'Precaching'                                      },
-    /* Gamemode init */
-    { at:0.88, s:'Initializing'                                    },
-    { at:0.94, s:'Spawning'                                        },
-    { at:1.00, s:'Ready'                                           },
+    { at:0.02, s:'Challenging'                                   },
+    { at:0.05, s:'Sending client info'                           },
+    { at:0.08, s:'Sending client data'                           },
+    { at:0.11, s:'Verifying Steam session'                       },
+    { at:0.13, s:'Receiving signon data'                         },
+    { at:0.15, f:function(){ SetFilesTotal(124); }               },
+    { at:0.19, s:'models/clone_trooper/ct_phase2.mdl'            },
+    { at:0.26, s:'materials/models/ct_phase2/ct_phase2.vmt'      },
+    { at:0.33, s:'materials/models/ct_phase2/ct_phase2.vtf'      },
+    { at:0.38, f:function(){ SetFilesNeeded(62); }               },
+    { at:0.42, s:'sound/helix/clone_vo_01.wav'                   },
+    { at:0.49, s:'models/weapons/w_rif_dc15a.mdl'                },
+    { at:0.54, f:function(){ SetFilesNeeded(31); }               },
+    { at:0.62, f:function(){ SetFilesNeeded(0); }                },
+    { at:0.70, s:'Loading map'                                   },
+    { at:0.76, s:'Lua Started!'                                  },
+    { at:0.82, s:'Precaching'                                    },
+    { at:0.88, s:'Initializing'                                  },
+    { at:0.94, s:'Spawning'                                      },
+    { at:1.00, s:'Ready'                                         },
   ];
 
   var p = 0, si = 0;
