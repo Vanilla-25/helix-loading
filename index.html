@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Helix Interactive — Connecting</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@300;400;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --gold:    #c8a84b;
+    --golddim: #7a6228;
+    --white:   #f0f4ff;
+    --dim:     #8a95b0;
+    --bg:      #080b12;
+    --panel:   rgba(8, 11, 18, 0.82);
+    --border:  rgba(200, 168, 75, 0.25);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    background: var(--bg);
+    overflow: hidden;
+    font-family: 'Rajdhani', sans-serif;
+    color: var(--white);
+  }
+
+  /* ── BACKGROUND ─────────────────────────────────────────────── */
+  #bg {
+    position: fixed; inset: 0; z-index: 0;
+    background-image: url('https://images2.alphacoders.com/134/1342506.jpg');
+    background-size: cover;
+    background-position: center 30%;
+    filter: brightness(0.32) saturate(0.7);
+    transform: scale(1.04);
+    animation: bgDrift 18s ease-in-out infinite alternate;
+  }
+  @keyframes bgDrift {
+    from { transform: scale(1.04) translateX(0px);   }
+    to   { transform: scale(1.04) translateX(-18px);  }
+  }
+
+  /* Vignette */
+  #bg::after {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at center, transparent 30%, rgba(4,6,10,0.75) 100%),
+      linear-gradient(to top, rgba(4,6,10,0.95) 0%, transparent 40%),
+      linear-gradient(to bottom, rgba(4,6,10,0.6) 0%, transparent 30%);
+  }
+
+  /* ── SCANLINE OVERLAY ───────────────────────────────────────── */
+  #scanlines {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 3px,
+      rgba(0,0,0,0.06) 3px,
+      rgba(0,0,0,0.06) 4px
+    );
+    opacity: 0.6;
+  }
+
+  /* ── LAYOUT ─────────────────────────────────────────────────── */
+  #root {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 36px 52px;
+  }
+
+  /* ── TOP BAR ────────────────────────────────────────────────── */
+  #topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.2s forwards;
+  }
+
+  #logo-block { display: flex; flex-direction: column; gap: 2px; }
+
+  #logo-overline {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.28em;
+    color: var(--gold);
+    text-transform: uppercase;
+    opacity: 0.8;
+  }
+
+  #logo-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(32px, 4vw, 52px);
+    letter-spacing: 0.06em;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  #logo-name span { color: var(--gold); }
+
+  #logo-sub {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 300;
+    letter-spacing: 0.22em;
+    color: var(--dim);
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* Gold accent line under logo */
+  #logo-line {
+    width: 0;
+    height: 2px;
+    background: linear-gradient(to right, var(--gold), transparent);
+    margin-top: 8px;
+    animation: lineExpand 1s ease 0.7s forwards;
+  }
+  @keyframes lineExpand { to { width: 220px; } }
+
+  /* Top-right status */
+  #status-block {
+    text-align: right;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    letter-spacing: 0.1em;
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--gold);
+    box-shadow: 0 0 6px var(--gold);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; box-shadow: 0 0 6px var(--gold); }
+    50%       { opacity: 0.4; box-shadow: 0 0 2px var(--gold); }
+  }
+
+  #player-count {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    letter-spacing: 0.06em;
+    color: var(--white);
+    line-height: 1;
+  }
+
+  #player-count span { color: var(--gold); font-size: 14px; vertical-align: middle; margin-left: 4px; }
+
+  /* ── MIDDLE AREA ────────────────────────────────────────────── */
+  #middle {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  #connecting-label {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 13px;
+    letter-spacing: 0.3em;
+    color: var(--golddim);
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeIn 1s ease 1.2s forwards;
+  }
+
+  .blink { animation: blink 1.2s step-end infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+  /* ── BOTTOM SECTION ─────────────────────────────────────────── */
+  #bottom {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    opacity: 0;
+    animation: fadeUp 0.8s ease 0.5s forwards;
+  }
+
+  /* Progress info row */
+  #progress-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+
+  #progress-stage {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+    text-transform: uppercase;
+  }
+
+  #progress-pct {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    color: var(--gold);
+  }
+
+  /* Bar */
+  #bar-track {
+    width: 100%;
+    height: 3px;
+    background: rgba(255,255,255,0.07);
+    position: relative;
+    overflow: hidden;
+  }
+
+  #bar-track::before {
+    content: '';
+    position: absolute; inset: 0;
+    background: repeating-linear-gradient(
+      to right,
+      rgba(255,255,255,0.04) 0px,
+      rgba(255,255,255,0.04) 1px,
+      transparent 1px,
+      transparent 40px
+    );
+  }
+
+  #bar-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(to right, var(--golddim), var(--gold));
+    box-shadow: 0 0 12px var(--gold), 0 0 30px rgba(200,168,75,0.3);
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+  }
+
+  /* Shimmer on bar */
+  #bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 40px; height: 100%;
+    background: linear-gradient(to right, transparent, rgba(255,255,255,0.6), transparent);
+    animation: shimmer 1.8s ease-in-out infinite;
+  }
+  @keyframes shimmer {
+    0%   { opacity: 0; transform: translateX(-20px); }
+    50%  { opacity: 1; }
+    100% { opacity: 0; transform: translateX(0px); }
+  }
+
+  /* Bottom footer line */
+  #footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  #footer-left {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    color: rgba(138, 149, 176, 0.45);
+    text-transform: uppercase;
+  }
+
+  #footer-right {
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    color: rgba(138, 149, 176, 0.45);
+    text-transform: uppercase;
+  }
+
+  /* ── CORNER ACCENTS ─────────────────────────────────────────── */
+  .corner {
+    position: fixed;
+    width: 28px; height: 28px;
+    border-color: rgba(200, 168, 75, 0.35);
+    border-style: solid;
+    z-index: 3;
+    opacity: 0;
+    animation: fadeIn 1s ease 0.3s forwards;
+  }
+  .corner.tl { top: 18px; left: 18px; border-width: 2px 0 0 2px; }
+  .corner.tr { top: 18px; right: 18px; border-width: 2px 2px 0 0; }
+  .corner.bl { bottom: 18px; left: 18px; border-width: 0 0 2px 2px; }
+  .corner.br { bottom: 18px; right: 18px; border-width: 0 2px 2px 0; }
+
+  /* ── ANIMATIONS ─────────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+</style>
+</head>
+<body>
+
+<div id="bg"></div>
+<div id="scanlines"></div>
+
+<!-- Corner brackets -->
+<div class="corner tl"></div>
+<div class="corner tr"></div>
+<div class="corner bl"></div>
+<div class="corner br"></div>
+
+<div id="root">
+
+  <!-- TOP BAR -->
+  <div id="topbar">
+    <div id="logo-block">
+      <div id="logo-overline">GArrysmod · Clone Wars RP</div>
+      <div id="logo-name">HELIX <span>INTERACTIVE</span></div>
+      <div id="logo-sub">Est. 2024 &nbsp;·&nbsp; Serious RP</div>
+      <div id="logo-line"></div>
+    </div>
+
+    <div id="status-block">
+      <div class="status-row">
+        <div class="status-dot"></div>
+        SERVER ONLINE
+      </div>
+      <div id="player-count">
+        <span id="pc-num">—</span><span>/ 128 PLAYERS</span>
+      </div>
+      <div class="status-row" style="color: rgba(138,149,176,0.5); font-size:10px;">
+        LIVE COUNT
+      </div>
+    </div>
+  </div>
+
+  <!-- MIDDLE -->
+  <div id="middle">
+    <div id="connecting-label">Establishing connection<span class="blink">_</span></div>
+  </div>
+
+  <!-- BOTTOM -->
+  <div id="bottom">
+    <div id="progress-info">
+      <div id="progress-stage">Initialising</div>
+      <div id="progress-pct">0%</div>
+    </div>
+
+    <div id="bar-track">
+      <div id="bar-fill"></div>
+    </div>
+
+    <div id="footer-row">
+      <div id="footer-left">Helix Interactive &copy; 2024</div>
+      <div id="footer-right">Do not close this window</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── GMOD LOADING HOOKS ────────────────────────────────────────────────────────
+// These are the real Gmod JS functions called by the engine during loading.
+// statusChanged fires with a status string, progressChanged with 0.0–1.0.
+
+const stages = [
+  "Initialising",
+  "Sending client info",
+  "Sending client data",
+  "Downloading game files",
+  "Loading map",
+  "Loading resources",
+  "Preparing client",
+  "Almost there",
+  "Ready",
+];
+
+const fillEl   = document.getElementById('bar-fill');
+const pctEl    = document.getElementById('progress-pct');
+const stageEl  = document.getElementById('progress-stage');
+const pcNumEl  = document.getElementById('pc-num');
+
+let currentProgress = 0;
+
+function setProgress(p) {
+  currentProgress = Math.max(currentProgress, p);
+  const pct = Math.round(currentProgress * 100);
+  fillEl.style.width  = pct + '%';
+  pctEl.textContent   = pct + '%';
+  // Pick stage label based on progress band
+  const idx = Math.min(Math.floor(currentProgress * stages.length), stages.length - 1);
+  stageEl.textContent = stages[idx];
+}
+
+// ── Gmod engine callbacks ─────────────────────────────────────────────────────
+function statusChanged(status) {
+  stageEl.textContent = status || stageEl.textContent;
+}
+
+function progressChanged(progress) {
+  setProgress(progress);
+}
+
+// ── Player count (Gmod provides GameDetails) ──────────────────────────────────
+function GameDetails(servName, mapName, maxPlayers, steamId, allowCheats) {
+  // maxPlayers available here; current count not directly exposed
+  // We'll show the max and a live fetch fallback below
+}
+
+// ── Fallback: animate progress if engine doesn't call us ─────────────────────
+// (useful during development / non-Gmod preview)
+(function devFallback() {
+  if (typeof GameDetails !== 'undefined' && window.location.hostname !== '') return;
+  let p = 0;
+  const iv = setInterval(() => {
+    p += Math.random() * 0.018 + 0.004;
+    if (p >= 1) { p = 1; clearInterval(iv); }
+    setProgress(p);
+  }, 120);
+})();
+
+// ── Live player count via Gmod's GameDetails injection ────────────────────────
+// Gmod calls SetFilesNeeded / SetFilesTotal for file counts, and
+// GameDetails for server info. We supplement with a Steam API query
+// if a Steam API key and appid are configured, but the simple approach
+// is just to show "ONLINE" and let the bar do the work.
+// If you want live counts, paste your server's query port below:
+//
+//   const QUERY_URL = 'https://your-proxy.com/players?ip=x.x.x.x&port=27015';
+//   fetch(QUERY_URL).then(r=>r.json()).then(d=>{ pcNumEl.textContent = d.players; });
+//
+// For now we just show the live dot as an indicator.
+pcNumEl.textContent = '—';
+</script>
+</body>
+</html>
