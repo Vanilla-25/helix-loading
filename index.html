@@ -240,8 +240,10 @@ html,body {
 .stat {
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   padding:0 24px;gap:5px;
-  /* Fixed size so values never push layout around */
-  min-width:100px;
+  /* Hard fixed width — values must never push layout */
+  width:110px;
+  flex-shrink:0;
+  flex-grow:0;
   border-right:1px solid rgba(255,255,255,0.04);
 }
 .stat:last-child{border-right:none}
@@ -256,7 +258,7 @@ html,body {
   font-size:13px;font-weight:500;
   color:var(--text);letter-spacing:0.04em;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-  max-width:90px;text-align:center;
+  width:100%;max-width:86px;text-align:center;
 }
 .stat-value.ok{color:var(--success)}
 
@@ -318,7 +320,7 @@ html,body {
 }
 #log-list li.show{opacity:1;transform:none}
 #log-list li.fresh{color:rgba(232,180,184,0.85)}
-#log-list li::before{content:'›';color:var(--pinkdim);flex-shrink:0}
+/* no bullet arrow on log items */
 
 /* ── KEYFRAMES ──────────────────────────────────────────────── */
 @keyframes fadeup  {from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
@@ -672,33 +674,42 @@ function tryFetchSteamName(id64) {
     .catch(function () { /* silently fail — Gmod may block outbound requests */ });
 }
 
-/* Called once by Gmod with server connection details */
+/* Called once by Gmod with server connection details.
+   Gmod signature: GameDetails(hostName, mapName, maxPlayers, steamId, allowCheats) */
 function GameDetails(servName, mapName, maxPlayers, steamId, allowCheats) {
 
   /* Server name */
-  if (servName) icServer.textContent = servName;
+  if (servName && typeof servName === 'string') {
+    icServer.textContent = servName;
+  }
 
-  /* Map name — Gmod sometimes passes sv_loadingurl here by mistake;
-     we ignore anything that looks like a URL */
-  if (mapName && mapName.indexOf('http') !== 0 && mapName.indexOf('//') !== 0) {
+  /* Map name — ignore anything that looks like a URL */
+  if (mapName && typeof mapName === 'string'
+      && mapName.indexOf('http') !== 0
+      && mapName.indexOf('//') !== 0) {
     psMap.textContent = mapName;
   }
 
-  /* Player count — current count (10) is known, maxPlayers comes from the server */
-  if (maxPlayers) psCount.textContent = '10 / ' + maxPlayers;
+  /* Max players — must parse as a real positive number */
+  var mp = parseInt(maxPlayers, 10);
+  if (!isNaN(mp) && mp > 0) {
+    psCount.textContent = '10 / ' + mp;
+  }
 
-  /* Steam ID + avatar + name */
-  if (steamId) {
-    plySteam.textContent = 'Steam ID: ' + steamId;
+  /* Steam ID — validate it looks like a real 64-bit ID before using */
+  var sid = String(steamId || '');
+  var isValid64   = /^[0-9]{15,20}$/.test(sid);
+  var isLegacyFmt = /^STEAM_[0-9]:[01]:[0-9]+$/i.test(sid);
 
-    /* Steam CDN avatar — format: <steamid64>_medium.jpg */
-    var avatarUrl = 'https://avatars.steamstatic.com/' + steamId + '_medium.jpg';
-    avImg.onload  = function () { avImg.style.display = 'block'; avFb.style.display = 'none'; };
-    avImg.onerror = function () { avImg.style.display = 'none';  avFb.style.display = ''; };
-    avImg.src = avatarUrl;
-
-    /* Try to get the player's actual Steam display name */
-    tryFetchSteamName(steamId);
+  if (isValid64 || isLegacyFmt) {
+    plySteam.textContent = 'Steam ID: ' + sid;
+    if (isValid64) {
+      var avatarUrl = 'https://avatars.steamstatic.com/' + sid + '_medium.jpg';
+      avImg.onload  = function () { avImg.style.display = 'block'; avFb.style.display = 'none'; };
+      avImg.onerror = function () { avImg.style.display = 'none';  avFb.style.display = ''; };
+      avImg.src = avatarUrl;
+      tryFetchSteamName(sid);
+    }
   }
 }
 
